@@ -1,5 +1,4 @@
 import requests
-import copy
 from datetime import datetime
 
 # =========================
@@ -37,7 +36,7 @@ print("\nNumbered Lines:")
 for i, line in enumerate(lines, 1):
     print(f"{i}. {line.strip()}")
 
-print("Total lines:", len(lines))
+print(f"Total number of lines: {len(lines)}")
 
 keyword = input("\nEnter keyword to search: ").lower()
 found = False
@@ -48,6 +47,14 @@ for line in lines:
 
 if not found:
     print("No matching lines found")
+
+# =========================
+# TASK 4: LOGGING FUNCTION
+# =========================
+
+def log_error(func, message):
+    with open("error_log.txt", "a") as f:
+        f.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR in {func}: {message}\n")
 
 # =========================
 # TASK 2: API
@@ -73,8 +80,10 @@ def fetch_products():
             print(p["title"], p["price"])
 
     except requests.exceptions.ConnectionError:
+        print("Connection failed")
         log_error("fetch_products", "ConnectionError")
     except requests.exceptions.Timeout:
+        print("Request timed out")
         log_error("fetch_products", "Timeout")
     except Exception as e:
         log_error("fetch_products", str(e))
@@ -96,9 +105,10 @@ def fetch_laptops():
 def post_product():
     try:
         data = {
-            "title": "My Product",
+            "title": "My Custom Product",
             "price": 999,
-            "category": "electronics"
+            "category": "electronics",
+            "description": "Created via API"
         }
         res = requests.post("https://dummyjson.com/products/add", json=data)
         print("\nPOST Response:", res.json())
@@ -106,6 +116,32 @@ def post_product():
     except Exception as e:
         log_error("post_product", str(e))
 
+
+def lookup_product():
+    while True:
+        user_input = input("\nEnter product ID (1-100) or 'quit': ")
+
+        if user_input.lower() == "quit":
+            break
+
+        if not user_input.isdigit():
+            print("Invalid input. Enter a number.")
+            continue
+
+        product_id = int(user_input)
+
+        try:
+            res = requests.get(f"https://dummyjson.com/products/{product_id}", timeout=5)
+
+            if res.status_code == 404:
+                print("Product not found")
+                log_error("lookup_product", "404 Not Found")
+            else:
+                data = res.json()
+                print(data["title"], "-", data["price"])
+
+        except Exception as e:
+            log_error("lookup_product", str(e))
 
 # =========================
 # TASK 3: EXCEPTION HANDLING
@@ -139,21 +175,16 @@ read_file_safe("python_notes.txt")
 read_file_safe("ghost.txt")
 
 # =========================
-# TASK 4: LOGGING
+# RUN ALL
 # =========================
 
-def log_error(func, message):
-    with open("error_log.txt", "a") as f:
-        f.write(f"[{datetime.now()}] ERROR in {func}: {message}\n")
-
-
-# Trigger errors intentionally
-log_error("manual_test", "This is a test error")
-
-# Run API
 fetch_products()
 fetch_laptops()
 post_product()
+lookup_product()
+
+# Trigger manual error
+log_error("manual_test", "Test error")
 
 # Print log file
 print("\nError Log Content:")
