@@ -1,1 +1,2 @@
-
+[2026-03-28 10:30:00] ERROR in manual_test: Test error
+[2026-03-28 10:30:01] ERROR in lookup_product: 404 Not Found
